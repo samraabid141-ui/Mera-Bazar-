@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mera Bazar</title>
+
+<style>
+body{
+  font-family:Arial,sans-serif;
+  margin:0;
+  background:#f5f8ff;
+  color:#222;
+}
+header{
+  background:#4f7cff;
+  color:white;
+  padding:20px;
+  text-align:center;
+}
+header h1{margin:0;}
+.container{
+  padding:20px;
+  max-width:700px;
+  margin:auto;
+}
+.card{
+  background:white;
+  padding:18px;
+  margin:15px 0;
+  border-radius:15px;
+  box-shadow:0 2px 8px #ddd;
+}
+input,textarea,button{
+  width:100%;
+  padding:12px;
+  margin:7px 0;
+  box-sizing:border-box;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+button{
+  background:#4f7cff;
+  color:white;
+  border:0;
+  font-size:16px;
+}
+.product{
+  border-top:1px solid #eee;
+  padding:15px 0;
+}
+.price{
+  color:#168a45;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🛍️ Mera Bazar</h1>
+  <p>Buy & Sell Easily</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+  <h2>🔎 Search Products</h2>
+  <input type="text" id="search" placeholder="Product search karein..." onkeyup="searchProducts()">
+</div>
+
+<div class="card">
+  <h2>➕ Sell Your Product</h2>
+
+  <input id="name" placeholder="Product name">
+  <input id="price" type="number" placeholder="Price (Rs)">
+  <textarea id="description" placeholder="Product description"></textarea>
+
+  <button onclick="addProduct()">Add Product</button>
+</div>
+
+<div class="card">
+  <h2>🛒 Products</h2>
+  <div id="products"></div>
+</div>
+
+</div>
+
+<script>
+
+let products = JSON.parse(localStorage.getItem("meraBazarProducts")) || [];
+
+function displayProducts(list = products){
+
+  const box = document.getElementById("products");
+  box.innerHTML = "";
+
+  if(list.length === 0){
+    box.innerHTML = "<p>No products available yet.</p>";
+    return;
+  }
+
+  list.forEach((p,index)=>{
+
+    box.innerHTML += `
+      <div class="product">
+        <h3>${p.name}</h3>
+        <p class="price">Rs ${p.price}</p>
+        <p>${p.description}</p>
+        <button onclick="contactSeller('${p.name}')">
+          📞 Contact Seller
+        </button>
+      </div>
+    `;
+
+  });
+}
+
+function addProduct(){
+
+  const name = document.getElementById("name").value.trim();
+  const price = document.getElementById("price").value;
+  const description = document.getElementById("description").value.trim();
+
+  if(!name || !price){
+    alert("Product name aur price zaroor likhein.");
+    return;
+  }
+
+  products.push({
+    name:name,
+    price:price,
+    description:description
+  });
+
+  localStorage.setItem("meraBazarProducts",JSON.stringify(products));
+
+  document.getElementById("name").value="";
+  document.getElementById("price").value="";
+  document.getElementById("description").value="";
+
+  displayProducts();
+
+  alert("Product successfully add ho gaya! 🎉");
+}
+
+function searchProducts(){
+
+  const q = document.getElementById("search").value.toLowerCase();
+
+  const result = products.filter(p =>
+    p.name.toLowerCase().includes(q)
+  );
+
+  displayProducts(result);
+}
+
+function contactSeller(product){
+
+  alert("Seller se contact karne ke liye WhatsApp feature next step mein add karenge.\n\nProduct: " + product);
+}
+
+displayProducts();
+
+</script>
+
+</body>
+</html>
