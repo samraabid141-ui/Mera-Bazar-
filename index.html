@@ -157,8 +157,9 @@ function searchProducts(){
 }
 
 function contactSeller(product){
-
-  alert("Seller se contact karne ke liye WhatsApp feature next step mein add karenge.\n\nProduct: " + product);
+  const number = "923162594812";
+  const message = encodeURIComponent("Assalam o Alaikum, mujhe Mera Bazar par " + product + " lena hai.");
+  window.open("https://wa.me/" + number + "?text=" + message, "_blank");
 }
 
 displayProducts();
