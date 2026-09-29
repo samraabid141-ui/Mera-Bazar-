@@ -87,28 +87,52 @@ button{
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+const SUPABASE_URL = "https://cifujepkzyfvsldkuxnc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QM9r1UaLnv1zKFUtBUpjxA_OLYSM49j";
 
-let products = JSON.parse(localStorage.getItem("meraBazarProducts")) || [];
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-function displayProducts(list = products){
+let products = [];
+
+async function displayProducts(){
 
   const box = document.getElementById("products");
+  box.innerHTML = "<p>Products loading...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if(error){
+    console.error(error);
+    box.innerHTML = "<p>Products load nahi ho sake.</p>";
+    return;
+  }
+
+  products = data || [];
   box.innerHTML = "";
 
-  if(list.length === 0){
+  if(products.length === 0){
     box.innerHTML = "<p>No products available yet.</p>";
     return;
   }
 
-  list.forEach((p,index)=>{
+  products.forEach(p => {
 
     box.innerHTML += `
       <div class="product">
-        <h3>${p.name}</h3>
+        <h3>${p.product_name}</h3>
         <p class="price">Rs ${p.price}</p>
-        <p>${p.description}</p>
-        <button onclick="contactSeller('${p.name}')">
+        <p>${p.description || ""}</p>
+
+        <button onclick="contactSeller('${p.product_name.replace(/'/g, "\\'")}')">
           📞 Contact Seller
         </button>
       </div>
@@ -116,6 +140,139 @@ function displayProducts(list = products){
 
   });
 }
+
+async function addProduct(){
+
+  const name = document.getElementById("name").value.trim();
+  const price = document.getElementById("price").value;
+  const description = document.getElementById("description").value.trim();
+
+  if(!name || !price){
+    alert("Product name aur price zaroor likhein.");
+    return;
+  }
+
+  /*
+    Temporary shop:
+    Abhi seller shop form add nahi kiya.
+    Isliye pehle ek shop create/use hogi.
+  */
+
+  let { data: shops, error: shopError } =
+    await supabaseClient
+      .from("shops")
+      .select("id")
+      .limit(1);
+
+  if(shopError){
+    alert("Shop database error.");
+    console.error(shopError);
+    return;
+  }
+
+  let shopId;
+
+  if(!shops || shops.length === 0){
+
+    const { data: newShop, error: newShopError } =
+      await supabaseClient
+        .from("shops")
+        .insert([{
+          shop_name: "Mera Bazaar Seller",
+          seller_name: "Seller",
+          whatsapp: "923162594812"
+        }])
+        .select()
+        .single();
+
+    if(newShopError){
+      alert("Shop create nahi hui.");
+      console.error(newShopError);
+      return;
+    }
+
+    shopId = newShop.id;
+
+  } else {
+    shopId = shops[0].id;
+  }
+
+  const { error } = await supabaseClient
+    .from("products")
+    .insert([{
+      shop_id: shopId,
+      product_name: name,
+      price: price,
+      description: description
+    }]);
+
+  if(error){
+    alert("Product add nahi hua.");
+    console.error(error);
+    return;
+  }
+
+  document.getElementById("name").value = "";
+  document.getElementById("price").value = "";
+  document.getElementById("description").value = "";
+
+  alert("Product successfully add ho gaya! 🎉");
+
+  displayProducts();
+}
+
+function searchProducts(){
+
+  const q = document.getElementById("search").value.toLowerCase();
+
+  const result = products.filter(p =>
+    p.product_name.toLowerCase().includes(q)
+  );
+
+  const box = document.getElementById("products");
+  box.innerHTML = "";
+
+  if(result.length === 0){
+    box.innerHTML = "<p>No products found.</p>";
+    return;
+  }
+
+  result.forEach(p => {
+
+    box.innerHTML += `
+      <div class="product">
+        <h3>${p.product_name}</h3>
+        <p class="price">Rs ${p.price}</p>
+        <p>${p.description || ""}</p>
+
+        <button onclick="contactSeller('${p.product_name.replace(/'/g, "\\'")}')">
+          📞 Contact Seller
+        </button>
+      </div>
+    `;
+
+  });
+}
+
+function contactSeller(product){
+
+  const number = "923162594812";
+
+  const message = encodeURIComponent(
+    "Assalam o Alaikum, mujhe Mera Bazar par " +
+    product +
+    " lena hai."
+  );
+
+  window.open(
+    "https://wa.me/" + number + "?text=" + message,
+    "_blank"
+  );
+}
+
+displayProducts();
+
+</script>
 
 function addProduct(){
 
