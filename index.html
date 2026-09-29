@@ -111,10 +111,10 @@ async function displayProducts(){
     .order("created_at", { ascending: false });
 
   if(error){
-    console.error(error);
-    box.innerHTML = "<p>Products load nahi ho sake.</p>";
-    return;
-  }
+  alert("ERROR: " + error.message);
+  console.error(error);
+  return;
+}
 
   products = data || [];
   box.innerHTML = "";
